@@ -1,0 +1,280 @@
+\documentclass{article}
+
+\usepackage{Sweave}
+\begin{document}
+\input{sweave31-concordance}
+
+\begin{Schunk}
+\begin{Soutput}
+	Augmented Dickey-Fuller Test
+
+data:  i.ts[, 1]
+Dickey-Fuller = -7.1634, Lag order = 7, p-value = 0.01
+alternative hypothesis: stationary
+\end{Soutput}
+\begin{Soutput}
+	Augmented Dickey-Fuller Test
+
+data:  c.ts[, 1]
+Dickey-Fuller = -7.3068, Lag order = 7, p-value = 0.01
+alternative hypothesis: stationary
+\end{Soutput}
+\begin{Soutput}
+	Augmented Dickey-Fuller Test
+
+data:  r.ts[, 1]
+Dickey-Fuller = -5.1807, Lag order = 7, p-value = 0.01
+alternative hypothesis: stationary
+\end{Soutput}
+\begin{Soutput}
+	Augmented Dickey-Fuller Test
+
+data:  sfs.ts[, 1]
+Dickey-Fuller = -5.1891, Lag order = 5, p-value = 0.01
+alternative hypothesis: stationary
+\end{Soutput}
+\begin{Soutput}
+	Augmented Dickey-Fuller Test
+
+data:  i.ts[, 2]
+Dickey-Fuller = -4.2325, Lag order = 7, p-value = 0.01
+alternative hypothesis: stationary
+\end{Soutput}
+\begin{Soutput}
+	Augmented Dickey-Fuller Test
+
+data:  c.ts[, 2]
+Dickey-Fuller = -3.3352, Lag order = 7, p-value = 0.06531
+alternative hypothesis: stationary
+\end{Soutput}
+\begin{Soutput}
+	Augmented Dickey-Fuller Test
+
+data:  r.ts[, 2]
+Dickey-Fuller = -4.7476, Lag order = 7, p-value = 0.01
+alternative hypothesis: stationary
+\end{Soutput}
+\begin{Soutput}
+	Augmented Dickey-Fuller Test
+
+data:  sfs.ts[, 2]
+Dickey-Fuller = -2.1497, Lag order = 5, p-value = 0.5132
+alternative hypothesis: stationary
+\end{Soutput}
+\begin{Soutput}
+VAR Estimation Results:
+======================= 
+
+Estimated coefficients for equation Return: 
+=========================================== 
+Call:
+Return = Return.l1 + CI.l1 + const 
+
+   Return.l1        CI.l1        const 
+-0.005258650 -0.001578553  0.042921136 
+
+
+Estimated coefficients for equation CI: 
+======================================= 
+Call:
+CI = Return.l1 + CI.l1 + const 
+
+ Return.l1      CI.l1      const 
+ 3.0990363  0.9471461 -0.5583080 
+\end{Soutput}
+\begin{Soutput}
+$Granger
+
+	Granger causality H0: Return do not Granger-cause CI
+
+data:  VAR object V.i
+F-Test = 8.0238, df1 = 1, df2 = 708, p-value = 0.004748
+
+
+$Instant
+
+	H0: No instantaneous causality between: Return and CI
+
+data:  VAR object V.i
+Chi-squared = 0.0111, df = 1, p-value = 0.9163
+\end{Soutput}
+\begin{Soutput}
+$Granger
+
+	Granger causality H0: CI do not Granger-cause Return
+
+data:  VAR object V.i
+F-Test = 3.1439, df1 = 1, df2 = 708, p-value = 0.07664
+
+
+$Instant
+
+	H0: No instantaneous causality between: CI and Return
+
+data:  VAR object V.i
+Chi-squared = 0.0111, df = 1, p-value = 0.9163
+\end{Soutput}
+\begin{Soutput}
+VAR Estimation Results:
+======================= 
+
+Estimated coefficients for equation Return: 
+=========================================== 
+Call:
+Return = Return.l1 + CI.l1 + const 
+
+    Return.l1         CI.l1         const 
+ 2.920105e-02 -4.989372e-05  2.621078e-02 
+
+
+Estimated coefficients for equation CI: 
+======================================= 
+Call:
+CI = Return.l1 + CI.l1 + const 
+
+ Return.l1      CI.l1      const 
+ 0.6623284  0.9817357 -0.2843260 
+\end{Soutput}
+\begin{Soutput}
+$Granger
+
+	Granger causality H0: Return do not Granger-cause CI
+
+data:  VAR object V.c
+F-Test = 0.9374, df1 = 1, df2 = 708, p-value = 0.3333
+
+
+$Instant
+
+	H0: No instantaneous causality between: Return and CI
+
+data:  VAR object V.c
+Chi-squared = 1.7719, df = 1, p-value = 0.1832
+\end{Soutput}
+\begin{Soutput}
+$Granger
+
+	Granger causality H0: CI do not Granger-cause Return
+
+data:  VAR object V.c
+F-Test = 0.004, df1 = 1, df2 = 708, p-value = 0.9498
+
+
+$Instant
+
+	H0: No instantaneous causality between: CI and Return
+
+data:  VAR object V.c
+Chi-squared = 1.7719, df = 1, p-value = 0.1832
+\end{Soutput}
+\begin{Soutput}
+VAR Estimation Results:
+======================= 
+
+Estimated coefficients for equation Return: 
+=========================================== 
+Call:
+Return = Return.l1 + CI.l1 + const 
+
+   Return.l1        CI.l1        const 
+ 0.008194411 -0.001079858  0.042444428 
+
+
+Estimated coefficients for equation CI: 
+======================================= 
+Call:
+CI = Return.l1 + CI.l1 + const 
+
+ Return.l1      CI.l1      const 
+3.97460394 0.90443029 0.08913053 
+\end{Soutput}
+\begin{Soutput}
+$Granger
+
+	Granger causality H0: Return do not Granger-cause CI
+
+data:  VAR object V.r
+F-Test = 8.6984, df1 = 1, df2 = 708, p-value = 0.00329
+
+
+$Instant
+
+	H0: No instantaneous causality between: Return and CI
+
+data:  VAR object V.r
+Chi-squared = 2.6327, df = 1, p-value = 0.1047
+\end{Soutput}
+\begin{Soutput}
+$Granger
+
+	Granger causality H0: CI do not Granger-cause Return
+
+data:  VAR object V.r
+F-Test = 1.2651, df1 = 1, df2 = 708, p-value = 0.2611
+
+
+$Instant
+
+	H0: No instantaneous causality between: CI and Return
+
+data:  VAR object V.r
+Chi-squared = 2.6327, df = 1, p-value = 0.1047
+\end{Soutput}
+\begin{Soutput}
+VAR Estimation Results:
+======================= 
+
+Estimated coefficients for equation Return: 
+=========================================== 
+Call:
+Return = Return.l1 + CI.l1 + const 
+
+   Return.l1        CI.l1        const 
+ 0.003786633 -0.000323535  0.049750393 
+
+
+Estimated coefficients for equation CI: 
+======================================= 
+Call:
+CI = Return.l1 + CI.l1 + const 
+
+ Return.l1      CI.l1      const 
+-0.6289857  0.9331965  0.2308466 
+\end{Soutput}
+\begin{Soutput}
+$Granger
+
+	Granger causality H0: Return do not Granger-cause CI
+
+data:  VAR object V.sfs
+F-Test = 0.0935, df1 = 1, df2 = 420, p-value = 0.7599
+
+
+$Instant
+
+	H0: No instantaneous causality between: Return and CI
+
+data:  VAR object V.sfs
+Chi-squared = 5.0329, df = 1, p-value = 0.02487
+\end{Soutput}
+\begin{Soutput}
+$Granger
+
+	Granger causality H0: CI do not Granger-cause Return
+
+data:  VAR object V.sfs
+F-Test = 0.1489, df1 = 1, df2 = 420, p-value = 0.6998
+
+
+$Instant
+
+	H0: No instantaneous causality between: CI and Return
+
+data:  VAR object V.sfs
+Chi-squared = 5.0329, df = 1, p-value = 0.02487
+\end{Soutput}
+\end{Schunk}
+
+
+
+\end{document}

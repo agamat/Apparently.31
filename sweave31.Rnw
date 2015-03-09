@@ -1,0 +1,441 @@
+\documentclass{article}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+<<echo=FALSE>>=
+library(XLConnectJars)
+library(XLConnect)
+library(rJava)
+library(gdata)
+library(xlsx)
+library(xlsxjars)
+library(xtable)
+library(PerformanceAnalytics)
+library(packrat)
+library(tseries)
+library(vars)
+################################################################################################################
+################################ Form sectors sample ###########################################################
+#sectors <- XLConnect::loadWorkbook("Sectors.xlsx") # load sectors workbook
+#sec <- readWorksheet(sectors, sheet="FTSEALL_CI") # load all companies in FTSE-ALL that matches confidence indicators
+#utility<-sec[1:8,]  # remove all utility companies from the sample
+#indust<-sec[9:222,] # specify manufacturing companies in the sample
+#const<-sec[223:235,] # specify construction companies in the sample
+#ret<-sec[236:269,] # specify retail trade companies in the sample
+#serv<-sec[270:356,] # specify services companies in the sample
+#finan<-sec[357:634,] # specify financial services companies in the sample
+#servfinan<-sec[270:634,] # financial services and services companies in the sample
+#row.names(utility) <- NULL # drop row names
+#row.names(indust) <- NULL # drop row names
+#row.names(const) <- NULL # drop row names
+#row.names(ret) <- NULL # drop row names
+#row.names(serv) <- NULL # drop row names
+#row.names(finan) <- NULL # drop row names
+#portfolios <- createWorkbook(type = "xlsx") # create a workbook to export the companies into portfolios
+#xl_i <- createSheet(portfolios, sheetName = "industry") # create a sheet for manufacturing sector
+#xl_c <- createSheet(portfolios, sheetName = "construction") # create a sheet for construction sector
+#xl_r <- createSheet(portfolios, sheetName = "retail") # create a sheet for retail sector
+#xl_s <- createSheet(portfolios, sheetName = "service") # create a sheet for services sector
+#3xl_f <- createSheet(portfolios, sheetName = "financial") # create a sheet for financial sector
+#xl_sf <- createSheet(portfolios, sheetName = "servfinan") # create a sheet for services including financials sector
+#p_i<-indust[,1] # add manufacturing industry to a portfolio
+#p_r<-ret[,1] # add retail trade to a portfolio
+#p_c<-const[,1] # add construction to a portfolio
+#p_s<-serv[,1] # add services to a portfolio
+#p_f<-finan[,1] # add financial to a portfolio
+#p_sf<-servfinan[,1] # add service financial to a portfolio
+#addDataFrame(p_i, sheet = xl_i, startRow = 1, startColumn = 1) # add the manufacturing portfolio to is excel sheet 
+#addDataFrame(p_c, sheet = xl_c, startRow = 1, startColumn = 1) # add the construction portfolio to is excel sheet
+#addDataFrame(p_r, sheet = xl_r, startRow = 1, startColumn = 1) # add the retail trade portfolio to is excel sheet
+#addDataFrame(p_s, sheet = xl_s, startRow = 1, startColumn = 1) # add the services portfolio to is excel sheet
+#addDataFrame(p_f, sheet = xl_f, startRow = 1, startColumn = 1) # add the financial portfolio to is excel sheet
+#addDataFrame(p_sf, sheet = xl_sf, startRow = 1, startColumn = 1) # add the service and financial portfolio to is excel sheet
+#saveWorkbook(portfolios, "portfolios.xlsx") # save the previous seets on the workbook
+###################################################################################################################################
+################## Clean data after downloading prices and market value for each sector from dataStream ###########################
+i_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "i_p", colNames=FALSE)  # import the prices of the sector ::
+c_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "c_p", colNames=FALSE)  
+r_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "r_p", colNames=FALSE)  
+s_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "s_p", colNames=FALSE)  
+f_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "f_p", colNames=FALSE)  
+sf_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "sf_p", colNames=FALSE)
+i_v<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "i_v", colNames=FALSE)  # import the market value of the sector ::
+c_v<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "c_v", colNames=FALSE)  
+r_v<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "r_v", colNames=FALSE)  
+s_v<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "s_v", colNames=FALSE)
+f_v<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "f_v", colNames=FALSE)
+sf_v<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "sf_v", colNames=FALSE)
+i_p$X92<-NULL # remove unavailable data
+i_p$X109<-NULL # remove unavailable data
+i_v$X92<-NULL # remove unavailable data
+i_v$X109<-NULL # remove unavailable data
+i_p<-i_p[-(1:3),] # remove the heading of start, end and frequency
+c_p<-c_p[-(1:3),] # remove the heading of start, end and frequency
+r_p<-r_p[-(1:3),] # remove the heading of start, end and frequency
+s_p<-s_p[-(1:3),] # remove the heading of start, end and frequency
+f_p<-f_p[-(1:3),] # remove the heading of start, end and frequency
+sf_p<-sf_p[-(1:3),] # remove the heading of start, end and frequency
+i_v<-i_v[-(1:3),] # remove the heading of start, end and frequency
+c_v<-c_v[-(1:3),] # remove the heading of start, end and frequency
+s_v<-s_v[-(1:3),] # remove the heading of start, end and frequency
+r_v<-r_v[-(1:3),] # remove the heading of start, end and frequency
+f_v<-f_v[-(1:3),] # remove the heading of start, end and frequency
+sf_v<-sf_v[-(1:3),] # remove the heading of start, end and frequency
+row.names(i_p)<-NULL # remove row names
+row.names(c_p)<-NULL # remove row names
+row.names(s_p)<-NULL # remove row names
+row.names(r_p)<-NULL # remove row names
+row.names(f_p)<-NULL # remove row names
+row.names(sf_p)<-NULL # remove row names
+row.names(i_v)<-NULL # remove row names
+row.names(c_v)<-NULL # remove row names
+row.names(r_v)<-NULL # remove row names
+row.names(s_v)<-NULL # remove row names
+row.names(f_v)<-NULL # remove row names
+row.names(sf_v)<-NULL # remove row names
+i_p[,1]<-as.Date(as.numeric(i_p[,1]), origin="1899-12-30") # change the serial date to proper date format :: 
+c_p[,1]<-as.Date(as.numeric(c_p[,1]), origin="1899-12-30")
+r_p[,1]<-as.Date(as.numeric(r_p[,1]), origin="1899-12-30")
+s_p[,1]<-as.Date(as.numeric(s_p[,1]), origin="1899-12-30")
+f_p[,1]<-as.Date(as.numeric(f_p[,1]), origin="1899-12-30")
+sf_p[,1]<-as.Date(as.numeric(sf_p[,1]), origin="1899-12-30")
+i_v[,1]<-as.Date(as.numeric(i_v[,1]), origin="1899-12-30")
+c_v[,1]<-as.Date(as.numeric(c_v[,1]), origin="1899-12-30")
+r_v[,1]<-as.Date(as.numeric(r_v[,1]), origin="1899-12-30")
+s_v[,1]<-as.Date(as.numeric(s_v[,1]), origin="1899-12-30")
+f_v[,1]<-as.Date(as.numeric(f_v[,1]), origin="1899-12-30")
+sf_v[,1]<-as.Date(as.numeric(sf_v[,1]), origin="1899-12-30")
+i_com<-i_p[1:2,] # extract comapnies names of each portfolio :: 
+c_com<-c_p[1:2,]
+r_com<-r_p[1:2,]
+s_com<-s_p[1:2,]
+f_com<-f_p[1:2,]
+sf_com<-sf_p[1:2,]
+i_p[2,(-1)]<-gsub("(P)","",i_p[2,(-1)], fixed=TRUE) # remove the "P" and the "V" from the companies names ::
+c_p[2,(-1)]<-gsub("(P)","",c_p[2,(-1)], fixed=TRUE)
+r_p[2,(-1)]<-gsub("(P)","",r_p[2,(-1)], fixed=TRUE)
+s_p[2,(-1)]<-gsub("(P)","",s_p[2,(-1)], fixed=TRUE)
+f_p[2,(-1)]<-gsub("(P)","",f_p[2,(-1)], fixed=TRUE)
+sf_p[2,(-1)]<-gsub("(P)","",sf_p[2,(-1)], fixed=TRUE)
+i_v[2,(-1)]<-gsub("(MV)","",i_v[2,(-1)], fixed=TRUE)
+c_v[2,(-1)]<-gsub("(MV)","",c_v[2,(-1)], fixed=TRUE)
+r_v[2,(-1)]<-gsub("(MV)","",r_v[2,(-1)], fixed=TRUE)
+s_v[2,(-1)]<-gsub("(MV)","",s_v[2,(-1)], fixed=TRUE)
+f_v[2,(-1)]<-gsub("(MV)","",f_v[2,(-1)], fixed=TRUE)
+sf_v[2,(-1)]<-gsub("(MV)","",sf_v[2,(-1)], fixed=TRUE)
+row.names(i_p)<-NULL # remove row names ::
+row.names(c_p)<-NULL
+row.names(r_p)<-NULL
+row.names(s_p)<-NULL
+row.names(f_p)<-NULL
+row.names(sf_p)<-NULL
+row.names(i_v)<-NULL
+row.names(c_v)<-NULL
+row.names(r_v)<-NULL
+row.names(s_v)<-NULL
+row.names(f_v)<-NULL
+row.names(sf_v)<-NULL
+colnames(i_p)<-i_p[2,] # set column names to be abbreviated companies names ::
+colnames(c_p)<-c_p[2,]
+colnames(r_p)<-r_p[2,]
+colnames(s_p)<-s_p[2,]
+colnames(f_p)<-f_p[2,]
+colnames(sf_p)<-sf_p[2,]
+colnames(i_v)<-i_v[2,]
+colnames(c_v)<-c_v[2,]
+colnames(r_v)<-r_v[2,]
+colnames(s_v)<-s_v[2,]
+colnames(f_v)<-f_v[2,]
+colnames(sf_v)<-sf_v[2,]
+i_p<-i_p[-(1:23),] # remove one month of the data (unused data) ::
+c_p<-c_p[-(1:23),]
+r_p<-r_p[-(1:23),]
+s_p<-s_p[-(1:23),]
+f_p<-f_p[-(1:23),]
+sf_p<-sf_p[-(1:23),]
+i_v<-i_v[-(1:24),]
+c_v<-c_v[-(1:24),]
+r_v<-r_v[-(1:24),]
+s_v<-s_v[-(1:24),]
+f_v<-f_v[-(1:24),]
+sf_v<-sf_v[-(1:24),]
+row.names(i_p)<-NULL # remove row names ::
+row.names(c_p)<-NULL
+row.names(r_p)<-NULL
+row.names(s_p)<-NULL
+row.names(f_p)<-NULL
+row.names(sf_p)<-NULL
+row.names(i_v)<-NULL
+row.names(c_v)<-NULL
+row.names(r_v)<-NULL
+row.names(s_v)<-NULL
+row.names(f_v)<-NULL
+row.names(sf_v)<-NULL
+colnames(i_p)[1]<-"i_p" # set first cell to include the name of the data ::
+colnames(c_p)[1]<-"c_p"
+colnames(r_p)[1]<-"r_p"
+colnames(s_p)[1]<-"s_p"
+colnames(f_p)[1]<-"f_p"
+colnames(sf_p)[1]<-"sf_p"
+colnames(i_v)[1]<-"i_v"
+colnames(c_v)[1]<-"c_v"
+colnames(r_v)[1]<-"r_v"
+colnames(s_v)[1]<-"s_v"
+colnames(f_v)[1]<-"f_v"
+colnames(sf_v)[1]<-"sf_v"
+############################### Calculate Monthy return on each sector ############################################################################
+###################################################################################################################################################
+v_id<-i_v[,1] # get dates to be used later ::
+i_v<-i_v[,-1] # drop dates to be able to set data as numeric ::
+i_v<-data.matrix(i_v) # set data as numeric ::
+i_v <- as.xts(i_v, order.by = as.Date(v_id, "%Y/%m/%d")) # transform the data frame into time series ::
+i_w <- i_v / rowSums(i_v, na.rm = TRUE) # calculate the ratio of market value to total market value  ::
+p_id<-i_p[,1]
+i_p<-i_p[,-1]
+i_p<-data.matrix(i_p)
+i_p <- as.xts(i_p, order.by = as.Date(p_id, "%Y/%m/%d"))
+i_r <- CalculateReturns(i_p) # calculate daily returns on the sector :
+i_r<-i_r[-1,]
+i_s=i_r*i_w # calculate the return on the sector (the weighted average returns of each firm in the sector) :
+i_sw<-as.xts((rowSums(i_s, na.rm=TRUE)*100),order.by = as.Date(v_id, "%Y/%m/%d"))
+i_sm <- tapply(i_sw, format(time(i_sw), "%Y-%m"), 
+               function(a) mean(a[as.integer(format(time(a), "%d")) <= 31])) # calculate the first ten days return to rpresent monthly return :: 
+i_sm<-data.matrix(i_sm)
+v_cd<-c_v[,1]
+c_v<-c_v[,-1]
+c_v<-data.matrix(c_v)
+c_v <- as.xts(c_v, order.by = as.Date(v_cd, "%Y/%m/%d"))
+c_w <- c_v / rowSums(c_v, na.rm = TRUE)
+p_cd<-c_p[,1]
+c_p<-c_p[,-1]
+c_p<-data.matrix(c_p)
+c_p <- as.xts(c_p, order.by = as.Date(p_cd, "%Y/%m/%d"))
+c_r <- CalculateReturns(c_p)
+c_r<-c_r[-1,]
+c_s=c_r*c_w
+c_sw<-as.xts((rowSums(c_s, na.rm=TRUE)*100),order.by = as.Date(v_cd, "%Y/%m/%d"))
+c_sm <- tapply(c_sw, format(time(c_sw), "%Y-%m"), 
+               function(a) mean(a[as.integer(format(time(a), "%d")) <= 31]))
+c_sm<-data.matrix(c_sm)
+v_rd<-r_v[,1]
+r_v<-r_v[,-1]
+r_v<-data.matrix(r_v)
+r_v <- as.xts(r_v, order.by = as.Date(v_rd, "%Y/%m/%d"))
+r_w <- r_v / rowSums(r_v, na.rm = TRUE)
+p_rd<-r_p[,1]
+r_p<-r_p[,-1]
+r_p<-data.matrix(r_p)
+r_p <- as.xts(r_p, order.by = as.Date(p_rd, "%Y/%m/%d"))
+r_r <- CalculateReturns(r_p)
+r_r<-r_r[-1,]
+r_s=r_r*r_w
+r_sw<-as.xts((rowSums(r_s, na.rm=TRUE)*100),order.by = as.Date(v_rd, "%Y/%m/%d"))
+r_sm <- tapply(r_sw, format(time(r_sw), "%Y-%m"), 
+               function(a) mean(a[as.integer(format(time(a), "%d")) <= 31]))
+r_sm<-data.matrix(r_sm)
+v_sd<-s_v[,1]
+s_v<-s_v[,-1]
+s_v<-data.matrix(s_v)
+s_v <- as.xts(s_v, order.by = as.Date(v_sd, "%Y/%m/%d"))
+s_w <- s_v / rowSums(s_v, na.rm = TRUE)
+p_sd<-s_p[,1]
+s_p<-s_p[,-1]
+s_p<-data.matrix(s_p)
+s_p <- as.xts(s_p, order.by = as.Date(p_sd, "%Y/%m/%d"))
+s_r <- CalculateReturns(s_p)
+s_r<-s_r[-1,]
+s_s=s_r*s_w
+s_sw<-as.xts((rowSums(s_s, na.rm=TRUE)*100),order.by = as.Date(v_sd, "%Y/%m/%d"))
+s_sm <- tapply(s_sw, format(time(s_sw), "%Y-%m"), 
+               function(a) mean(a[as.integer(format(time(a), "%d")) <= 31]))
+s_sm<-data.matrix(s_sm)
+v_fd<-f_v[,1]
+f_v<-f_v[,-1]
+f_v<-data.matrix(f_v)
+f_v <- as.xts(f_v, order.by = as.Date(v_fd, "%Y/%m/%d"))
+f_w <- f_v / rowSums(f_v, na.rm = TRUE)
+p_fd<-f_p[,1]
+f_p<-f_p[,-1]
+f_p<-data.matrix(f_p)
+f_p <- as.xts(f_p, order.by = as.Date(p_fd, "%Y/%m/%d"))
+f_r <- CalculateReturns(f_p)
+f_r<-f_r[-1,]
+f_s=f_r*f_w
+f_sw<-as.xts((rowSums(f_s, na.rm=TRUE)*100),order.by = as.Date(v_fd, "%Y/%m/%d"))
+f_sm <- tapply(f_sw, format(time(f_sw), "%Y-%m"), 
+               function(a) mean(a[as.integer(format(time(a), "%d")) <= 31]))
+f_sm<-data.matrix(f_sm)
+v_sfd<-sf_v[,1] # identify dates for market values
+sf_v<-sf_v[,-1] # remove dates to prepare for time series
+sf_v<-data.matrix(sf_v) # convert the data frame to numeric
+sf_v <- as.xts(sf_v, order.by = as.Date(v_sfd, "%Y/%m/%d")) # convert to time series class
+sf_w <- sf_v / rowSums(sf_v, na.rm = TRUE) # calculate the weights of market value
+p_sfd<-sf_p[,1] # identify dates for price
+sf_p<-sf_p[,-1] # remove dates to prepare for time series
+sf_p<-data.matrix(sf_p) # convert the data frame to numeric
+sf_p <- as.xts(sf_p, order.by = as.Date(p_sfd, "%Y/%m/%d")) # convert to time series class
+sf_r <- CalculateReturns(sf_p) # calculate returns for financial services and services
+sf_r<-sf_r[-1,]
+sf_s=sf_r*sf_w
+sf_sw<-as.xts((rowSums(sf_s, na.rm=TRUE)*100),order.by = as.Date(v_sfd, "%Y/%m/%d"))
+sf_sm <- tapply(sf_sw, format(time(sf_sw), "%Y-%m"), 
+                function(a) mean(a[as.integer(format(time(a), "%d")) <= 31]))
+sf_sm<-data.matrix(sf_sm)
+sf_sm<-sf_sm[-(1:144),] # remove unused sample from the data
+sf_sm<-data.frame(sf_sm) # readjusting the service file after removing some rows which need to has a number attribute ::
+sf_sm<-as.matrix(sf_sm)
+sfs_sm<-c(sf_sm[1:111,],s_sm[256:358,]) # form a portfolio that matches the CI sample
+attributes(sfs_sm)<-attributes(sf_sm)
+########################################################################################################################
+#################### Combining both returns and sentiment indices ########################################################
+ukcc<- read.csv('/Users/Ahmed/Google\ Drive/Thesis/First\ Paper\ analysis/First_paper/uksi.csv') # import confidence indicators data
+#ukcc[,1]<-as.Date(as.numeric(ukcc[,1]), origin="1899-12-30") # set the date to be numeric
+#colnames(ukcc)<-ukcc[1,] # adjusting colnames ::
+#ukcc<-ukcc[-1,]
+#row.names(ukcc)<-NULL
+#colnames(ukcc)[1]<-"Date"
+#ukcc$Date<-strftime(ukcc$Date, format="%Y-%m") # change date format to be years and months only
+i<-cbind(i_sm,ukcc$UK.INDU) # combine returns with confidence indicators ::
+c<-cbind(c_sm,ukcc$UK.BUIL)
+r<-cbind(r_sm,ukcc$UK.RETA)
+#s<-cbind(s_sm,ukcc$UK.SERV)
+#f<-cbind(f_sm,ukcc$UK.INDU) # this is inactive because now confidence indicator data is available
+SERV<-ukcc$UK.SERV # to remove unused sample from the data
+SERV<-as.matrix(SERV)
+SERV<-SERV[-(1:144),]
+sfs<-cbind(sfs_sm,SERV)
+colnames(i)<-c("Return","CI") # change column names ::
+colnames(c)<-c("Return","CI")
+colnames(r)<-c("Return","CI")
+#colnames(s)<-c("Return","CI")
+colnames(sfs)<-c("Return","CI")
+i.ts <- ts(i, start=as.yearmon(rownames(i)[1]), frequency=12) # change portfolios to time series ::
+c.ts <- ts(c, start=as.yearmon(rownames(c)[1]), frequency=12)
+r.ts <- ts(r, start=as.yearmon(rownames(r)[1]), frequency=12)
+#s.ts <- ts(s, start=as.yearmon(rownames(s)[1]), frequency=12)
+sfs.ts <- ts(sfs, start=as.yearmon(rownames(sfs)[1]), frequency=12)
+plot(i.ts, main="Industry") # plotting pairs
+plot(c.ts, main="Construction")
+plot(r.ts, main="Retail")
+#plot(s.ts, main="Services")
+plot(sfs.ts, main="Services")
+UK.CONS<-ukcc$UK.CONS  # pair with uk consumers
+UK.CONS<-as.matrix(UK.CONS)
+UK.CONS97<-UK.CONS[-(1:144),]
+i_cc<-cbind(i_sm,ukcc$UK.CONS)
+c_cc<-cbind(c_sm,ukcc$UK.CONS)
+r_cc<-cbind(r_sm,ukcc$UK.CONS)
+s_cc<-cbind(s_sm,ukcc$UK.CONS)
+sfs_cc<-cbind(sfs_sm,UK.CONS97)
+icc_ts<-ts(i_cc)
+ccc_ts<-ts(c_cc)
+rcc_ts<-ts(r_cc)
+#scc_ts<-ts(s_cc)
+sfscc_ts<-ts(sfs_cc)
+###################################### Calculating Cross-correlation ###################################
+i.ccf<-ccf(i.ts[,2],i.ts[,1], type="correlation", 20)
+c.ccf<-ccf(c.ts[,2],c.ts[,1], type="correlation", 20)
+r.ccf<-ccf(r.ts[,2],r.ts[,1], type="correlation", 20)
+#s.ccf<-ccf(s.ts[,2],s.ts[,1], type="correlation", 20)
+sfs.ccf<-ccf(sfs.ts[,2],sfs.ts[,1], type="correlation", 20)
+###############################################################################################################################
+########################## Plotting ###########################################################################################
+dates<-seq(as.Date("1985/1/1"), as.Date("2014/10/1"), "month")
+dates<-strftime(dates, format="%Y-%m")
+ESI<-cbind(dates,ukcc$UK.ESI)
+row.names(ESI)<-ESI[,1]
+ESI<-ESI[,-(1)]
+ESI<-as.matrix(ESI)
+colnames(ESI)<-"ESI"
+ESI.ts <- ts(ESI, start=as.yearmon(rownames(ESI)[1]), frequency=12)
+#tikz("/Users/Ahmed/Documents/was/UK.ESI.tex",width=4.5,height=3.2)
+plot(ESI.ts, type="l",col="darkblue", main="UK Economic Sentiment Indicator", xlab="Time", ylab="UK ESI")
+#dev.off()
+
+#tikz("/Users/Ahmed/Documents/was/ukcc.i.tex",width=4.5,height=3.5)
+plot(i.ts, main="Manufacturing",col="darkblue", xlab=NULL,cex.axis=0.5)
+#dev.off()
+
+#tikz("/Users/Ahmed/Documents/was/ukcc.i.tex",width=4.5,height=3.5)
+#plot(i.ts, main="Industry",col="darkblue", xlab=NULL,cex.axis=0.5)
+#dev.off()
+
+#tikz("/Users/Ahmed/Documents/was/ukcc.c.tex",width=4.5,height=3.5)
+plot(c.ts, main="Construction",col="darkblue", xlab=NULL,cex.axis=0.5)
+#dev.off()
+
+#tikz("/Users/Ahmed/Documents/was/ukcc.r.tex",width=4.5,height=3.5)
+plot(r.ts, main="Retail",col="darkblue", xlab=NULL,cex.axis=0.5)
+#dev.off()
+
+#tikz("/Users/Ahmed/Documents/was/ukcc.s.tex",width=4.5,height=3.5)
+#plot(s.ts, main="Services",col="darkblue", xlab=NULL,cex.axis=0.5)
+#dev.off()
+
+#tikz("/Users/Ahmed/Documents/was/ukcc.sfs.tex",width=4.5,height=3.5)
+plot(sfs.ts, main="Services",col="darkblue", xlab=NULL,cex.axis=0.5)
+#dev.off()
+
+
+
+#tikz("/Users/Ahmed/Documents/was/is.ac.tex",width=4.5,height=3.5)
+plot(i.ccf, main="IS Monthly Cross-correlation", ylab="cross-correlation")
+#dev.off()
+
+
+#tikz("/Users/Ahmed/Documents/was/cs.ac.tex",width=4.5,height=3.5)
+plot(c.ccf, main="CS Monthly Cross-correlation", ylab="cross-correlation")
+#dev.off()
+
+
+#tikz("/Users/Ahmed/Documents/was/rs.ac.tex",width=4.5,height=3.5)
+plot(r.ccf, main="RS Monthly Cross-correlation", ylab="cross-correlation")
+#dev.off()
+
+
+#tikz("/Users/Ahmed/Documents/was/ss.ac.tex",width=4.5,height=3.5)
+#plot(s.ccf, main="SS Monthly Cross-correlation", ylab="cross-correlation")
+#dev.off()
+
+#tikz("/Users/Ahmed/Documents/was/sfss.ac.tex",width=4.5,height=3.5)
+plot(sfs.ccf, main="SS Monthly Cross-correlation", ylab="cross-correlation")
+#dev.off()
+#################################################################################################################################
+############################### Test the stationarity ###########################################################################
+adf.test(i.ts[,1], alternative = c("stationary", "explosive"),k = trunc((length(i.ts[,1])-1)^(1/3)))
+adf.test(c.ts[,1], alternative = c("stationary", "explosive"),k = trunc((length(c.ts[,1])-1)^(1/3)))
+adf.test(r.ts[,1], alternative = c("stationary", "explosive"),k = trunc((length(r.ts[,1])-1)^(1/3)))
+adf.test(sfs.ts[,1], alternative = c("stationary", "explosive"),k = trunc((length(sfs.ts[,1])-1)^(1/3)))
+adf.test(i.ts[,2], alternative = c("stationary", "explosive"),k = trunc((length(i.ts[,2])-1)^(1/3)))
+adf.test(c.ts[,2], alternative = c("stationary", "explosive"),k = trunc((length(c.ts[,2])-1)^(1/3)))
+adf.test(r.ts[,2], alternative = c("stationary", "explosive"),k = trunc((length(r.ts[,2])-1)^(1/3)))
+adf.test(sfs.ts[,2], alternative = c("stationary", "explosive"),k = trunc((length(sfs.ts[,2])-1)^(1/3)))
+
+
+VAR(i.ts)
+V.i<-VAR(i.ts)
+causality(V.i, cause = NULL, vcov.=NULL, boot=FALSE, boot.runs=100)
+causality(V.i, cause = "CI", vcov.=NULL, boot=FALSE, boot.runs=100)
+
+VAR(c.ts)
+V.c<-VAR(c.ts)
+causality(V.c, cause = NULL, vcov.=NULL, boot=FALSE, boot.runs=100)
+causality(V.c, cause = "CI", vcov.=NULL, boot=FALSE, boot.runs=100)
+
+VAR(r.ts)
+V.r<-VAR(r.ts)
+causality(V.r, cause = NULL, vcov.=NULL, boot=FALSE, boot.runs=100)
+causality(V.r, cause = "CI", vcov.=NULL, boot=FALSE, boot.runs=100)
+
+VAR(sfs.ts)
+V.sfs<-VAR(sfs.ts)
+causality(V.sfs, cause = NULL, vcov.=NULL, boot=FALSE, boot.runs=100)
+causality(V.sfs, cause = "CI", vcov.=NULL, boot=FALSE, boot.runs=100)
+
+
+@
+
+
+
+\end{document}
