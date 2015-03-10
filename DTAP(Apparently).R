@@ -2,8 +2,6 @@
 ci<-ukci
 colnames(ci)<-c("Date", "Manufacturing", "Services","Consumer","Retail", "Construction", "Market")
 ci<-ci[,c(1,7,2,6,5,3,4)]
-datem<-seq(as.Date('1985-01-01'),as.Date('2014-10-01'),by = "month")
-datem<-as.yearmon(datem)
 ci[,1]<-as.Date(datem)
 
 sec_prices<-data.frame(log.prices[-c(7,8)])
@@ -23,6 +21,12 @@ for(i in 2:6){
 }
 class(sec_prices$Services)<-"numeric"
 
+sec_return<-returns_mon
+for(i in 1:8){
+  attributes(sec_return[[i]])<-NULL
+}
+
+sec_returns<-data.frame(sec_return)
 
 
 
@@ -37,6 +41,9 @@ ci_win[,-1]<-winsor(ci_win[,-1])
 
 sec_prices_win<-sec_prices
 sec_prices_win[,-1]<-winsor(sec_prices[,-1])
+
+sec_returns_win<-sec_returns
+sec_returns_win<-winsor(sec_returns)
 
 
 # Descriptives ------------------------------------------------------------
@@ -56,7 +63,13 @@ sec_prices_win_des<-sec_prices_win_des[,-c(1,5,7,10,12,13)]
 write.xlsx(ci_des,file = "/Users/Ahmed/Google Drive/Thesis/First Paper analysis/Apparently.31/output.xls",sheetName = "sec_prices_des")
 write.xlsx(ci_win_des,file = "/Users/Ahmed/Google Drive/Thesis/First Paper analysis/Apparently.31/output.xls",sheetName = "sec_prices_win_des")
 
+sec_returns_des<-describe(sec_returns)
+sec_returns_des<-sec_returns_des[,-c(1,5,7,10,12,13)]
+sec_returns_win_des<-describe(sec_returns_win[,-1])
+sec_returns_win_des<-sec_returns_win_des[,-c(1,5,7,10,12,13)]
 
+write.xlsx(ci_des,file = "/Users/Ahmed/Google Drive/Thesis/First Paper analysis/Apparently.31/output.xls",sheetName = "sec_returns_des")
+write.xlsx(ci_win_des,file = "/Users/Ahmed/Google Drive/Thesis/First Paper analysis/Apparently.31/output.xls",sheetName = "sec_returns_win_des")
 
 # Plotting ----------------------------------------------------------------
 ccplot<-ggplot(dat = melt(ci, id.var="Date"), aes(x=Date, y=value)) + 

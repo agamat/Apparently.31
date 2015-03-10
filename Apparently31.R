@@ -15,9 +15,10 @@ library(qpcR)
 library(plyr)
 library(stargazer)
 library(psych)
+library(scales)
 # importing data of European commision sentiment index, FTSE100 prices and FTSE-Allshares sector portfolios----
-ukci<- read.csv('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/uksi.csv') 
-FTSE100<-read.csv("/Users/Ahmed/Google Drive/Thesis/Data/FTSE/FTSE100d.csv")
+ukci<- read.csv('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/uksi.csv')
+FTSE100<-read.csv("/Users/Ahmed/Google Drive/Thesis/First Paper analysis/Apparently.31/FTSE100d.csv")
 m_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "i_p", colNames=FALSE)  # import the prices of the sector ::
 c_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "c_p", colNames=FALSE)  
 r_p<- openxlsx::read.xlsx('/Users/Ahmed/Google Drive/Thesis/First\ Paper\ analysis/First_paper/ports.xlsx', sheet = "r_p", colNames=FALSE)  
@@ -40,14 +41,15 @@ ukcc<-ukci[,-1] #removing date column
 colnames(ukcc)<-c("mnfact","serv", "consu","retail","const", "esi")
 ukcc<-ukcc[c(5,2,1,4,3,6)] # rearranging ukcc
 # clean FTSE100 and calculate monthly data ---------------------------------
-FTSE100.pp<-FTSE100[,2]
-FTSE100.pp<-log(FTSE100.pp)
+FTSE100.price<-FTSE100[,2]
+FTSE100.pp<-log(FTSE100.price)
 FTSE100.p<-zooreg(FTSE100.pp, order.by = Date)
 #FTSE100.ts<-as.ts(FTSE100.p)
-FTSE100.p <- tapply(FTSE100.p, format(time(FTSE100.p), "%Y-%m"),
+FTSE100p_mon <- tapply(FTSE100.p, format(time(FTSE100.p), "%Y-%m"),
                     function(a) mean(a[as.integer(format(time(a), "%d")) <=31], na.rm = TRUE))
+FTSE100p_mon<-FTSE100p_mon[-1]
 #esi.ts<-zooreg(esi, order.by = Date)
-# clean sectors portfolios and calculate monthly prices ------------------------
+# clean sectors portfolios and calculate monthly prices and returns------------------------
 prices<-mget(ls(pattern= "_p"))
 market.values<-mget(ls(pattern= "_v"))
 prices<-lapply(prices, function(a){a<-a[-(1:3),]})
@@ -121,8 +123,48 @@ log.prices<-lapply(mget(ls(pattern= "_mon")), log)
 log.prices<-lapply(log.prices, function(a){a<-a[-1]})
 log.prices$sfs_mon<-c(log.prices$sf_mon[145:255],log.prices$s_mon[256:358])
 sfs_monF<-c(rep(NA,times = 144),log.prices$sfs_mon)
+
+
+returns<-lapply(prices.zoo, Return.calculate)
+for(i in 1:6){
+  returns[[i]]<-returns[[i]][-1,]
+}
+market_values<-marketvalues.zoo
+for(i in 1:6){
+  market_values[[i]]<-marketvalues.zoo[[i]][-1,]
+}
+wr<-market_values
+for(i in 1:6){
+  wr[[i]]<-returns[[i]]*market_values[[i]]
+}
+
+weighted.returns<-market_values
+for(i in 1:6){
+  weighted.returns[[i]]<-as.xts(rowSums(wr[[i]], na.rm=TRUE),order.by = Dated[-1], "%Y/%m/%d")
+}
+returns_mon<-weighted.returns
+for(i in 1:6){
+  returns_mon[[i]]<-tapply(weighted.returns[[i]], format(time(weighted.returns[[i]]), "%Y-%m"),
+                           function(a) sum(a[as.integer(format(time(a), "%d")) <=31], na.rm = TRUE))
+}
+
+names(returns_mon)<-c("Construction","Financial","Manufacturing","Retail","Services","FinanServ")
+
+returns_mon$Services.F<-c(rep(NA,144),returns_mon$FinanServ[145:255],returns_mon$Services[256:358])
+attributes(returns_mon$Services.F)<-attributes(returns_mon$FinanServ)
+FTSE100.zoo<-zooreg(FTSE100[,2],order.by = Dated)
+FTSE100d.return<-Return.calculate(FTSE100.zoo)
+FTSE100d.return<-FTSE100d.return[-1,]
+FTSE100r_mon <- tapply(FTSE100d.return, format(time(FTSE100d.return), "%Y-%m"),
+                       function(a) sum(a[as.integer(format(time(a), "%d")) <=31], na.rm = TRUE))
+returns_mon$Market<-FTSE100r_mon
+
+
+
+
+
 # constructing pairs of prices and sentiment index ------------------------
-market<-cbind(FTSE100.p, ukcc$esi)
+market<-cbind(FTSE100p_mon, ukcc$esi)
 const<-cbind(log.prices$c_mon, ukcc$const)
 serv<-cbind(log.prices$sfs_mon, ukcc$serv[145:358])
 manfact<-cbind(log.prices$m_mon, ukcc$mnfact)
@@ -131,8 +173,6 @@ glist<-list(market=market, const=const, serv=serv,manfact=manfact, retail=retail
 for(i in 1:5){
   colnames(glist[[i]])<-c("prices","sentiment")
 }
-
-
 
 
 # ADF test and Granger Causality -----------------------------------------------
@@ -151,14 +191,9 @@ VARs<-lapply(diff, VAR)
 g.causalities<-lapply(VARs, causality, cause="sentiment")
 
 # Descriptives ------------------------------------------------------------
-general<-cbind(ukcc, FTSE100=FTSE100.p, const.p=log.prices[[1]],finservserv.p=sfs_monF,manfact.p=log.prices[[3]],retail.p=log.prices[[4]],serv.p=log.prices[[5]],servfinan.p=log.prices[[6]], finan.p=log.prices[[2]] )
+general<-cbind(ukcc, FTSE100=FTSE100p_mon, const.p=log.prices[[1]],finservserv.p=sfs_monF,manfact.p=log.prices[[3]],retail.p=log.prices[[4]],serv.p=log.prices[[5]],servfinan.p=log.prices[[6]], finan.p=log.prices[[2]] )
 row.names(general)<-NULL
 general<-data.matrix(general)
-
-
-
-
-
 
 # plotting ----------------------------------------------------------------
 glist.ts<-lapply(glist[-3], function(a){a<-ts(a, start=as.yearmon(rownames(market)[1]), frequency=12)})
